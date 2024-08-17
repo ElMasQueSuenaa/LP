@@ -1,14 +1,14 @@
 import re
 
 # EBNF para las diferentes expresiones
-define = r"^\s*DEFINE\s*\$_[A-Z][A-Za-z]*\s*$"
-asignacion = r"^\s*DP\s+(\$_[A-Z][A-Za-z]*)\s+ASIG\s+(True|False|\d+|#[^#]*#|\$_[A-Z][A-Za-z]*)\s*$"
-suma = r"^\s*DP\s+\$_[A-Z][A-Za-z]*\s+\+\s+(\$_[A-Z][A-Za-z]*|\d+|#[^#]*#)\s+(\$_[A-Z][A-Za-z]*|\d+|#[^#]*#)\s*$"
-multiplicacion = r"^\s*DP\s+\$_[A-Z][A-Za-z]*\s+\*\s+(\$_[A-Z][A-Za-z]*|\d+)\s+(\$_[A-Z][A-Za-z]*|\d+)\s*$"
-leer_if = r"^\s*if\s*\(\s*\$_[A-Z][A-Za-z]*\s*\)\s*\{\s*$"
-leer_else = r"^\s*\}\s*else\s*\{\s*$"
-mostrar = r"^\s*MOSTRAR\(\s*\$_[A-Z][A-Za-z]*\s*\)\s*$"
-concatenacion_texto = r"^\s*DP\s+\$_[A-Z][A-Za-z]*\s+\+\s+(\$_[A-Z][A-Za-z]*|#[^#]*#)\s+(\$_[A-Z][A-Za-z]*|#[^#]*#)\s*$"
+define = r"^DEFINE\s+\$_[A-Z][A-Za-z]*\s*$"
+asignacion = r"^DP\s+\$_[A-Z][A-Za-z]*\s+ASIG\s+(True|False|\d+|#[^#]*#|\$_[A-Z][A-Za-z]*)\s*$"
+suma = r"^DP\s+\$_[A-Z][A-Za-z]*\s+\+\s+(\$_[A-Z][A-Za-z]*|\d+|#[^#]*#)\s+(\$_[A-Z][A-Za-z]*|\d+|#[^#]*#)\s*$"
+multiplicacion = r"^DP\s+\$_[A-Z][A-Za-z]*\s+\*\s+(\$_[A-Z][A-Za-z]*|\d+)\s+(\$_[A-Z][A-Za-z]*|\d+)\s*$"
+leer_if = r"^if\s*\(\s*\$_[A-Z][A-Za-z]*\s*\)\s*\{\s*$"
+leer_else = r"^\}\s*else\s*\{\s*$"
+mostrar = r"^MOSTRAR\s*\(\s*\$_[A-Z][A-Za-z]*\s*\)\s*$"
+concatenacion_texto = r"^DP\s+\$_[A-Z][A-Za-z]*\s+\+\s+(\$_[A-Z][A-Za-z]*|#[^#]*#)\s+(\$_[A-Z][A-Za-z]*|#[^#]*#)\s*$"
 
 archivo_output = open("output.txt", "w")
 
@@ -72,7 +72,6 @@ def multiplicacion_variables(linea, numero_linea):
         return 1
     variables[var_nombre] = operando1_val * operando2_val
     return 0
-
 def main(nombre_archivo):
     with open(nombre_archivo) as file_object:
         lista = file_object.readlines()
@@ -86,20 +85,28 @@ def main(nombre_archivo):
             hayerror = asignar_variable(linea, i)
         elif re.match(multiplicacion, linea):
             hayerror = multiplicacion_variables(linea, i)
+        elif re.match(leer_if, linea):
+            # Add code to handle if statement
+            pass
+        elif re.match(leer_else, linea):
+            # Add code to handle else statement
+            pass
+        elif re.match(mostrar, linea):
+            # Add code to handle mostrar statement
+            pass
+        elif re.match(concatenacion_texto, linea):
+            # Add code to handle concatenacion_texto statement
+            pass
         else:
             print("Hay un error de sintaxis en la linea", i )
             hayerror = 1
-        
-        if hayerror == 1:
-            break
-        
         i += 1
 
     archivo_output.close()
 
     if hayerror == 1:
-        return 1  # Termina el programa si hay un error
+        return 1
     else:
         return 0
 
-main("codigo.txt")
+temp2 = main("codigo.txt")
