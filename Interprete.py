@@ -8,7 +8,7 @@ multiplicacion = r"^DP\s+\$_[A-Z][A-Za-z]*\s+\*\s+(\$_[A-Z][A-Za-z]*|\d+)\s+(\$_
 leer_if = r"^if\s*\(\s*\$_[A-Z][A-Za-z]*\s*\)\s*\{\s*$"
 leer_else = r"^\}\s*else\s*\{\s*$"
 mostrar = r"^MOSTRAR\s*\(\s*\$_[A-Z][A-Za-z]*\s*\)\s*$"
-concatenacion_texto = r"^DP\s+\$_[A-Z][A-Za-z]*\s+\+\s+(\$_[A-Z][A-Za-z]*|#[^#]*#)\s+(\$_[A-Z][A-Za-z]*|#[^#]*#)\s*$"
+
 
 archivo_output = open("output.txt", "w")
 
@@ -56,22 +56,52 @@ def multiplicacion_variables(linea, numero_linea):
     if var_nombre not in variables:
         print("Error en la línea", numero_linea, ": Variable no definida")
         return 1
-    if operando1.isdigit():
-        operando1_val = int(operando1)
-    elif operando1 in variables:
+    if operando1 in variables:
         operando1_val = variables[operando1]
     else:
-        print("Error en la línea", numero_linea, ": Operando 1 no es válido")
+        print("Error en la línea", numero_linea, ": Operando 1 no definido")
         return 1
-    if operando2.isdigit():
-        operando2_val = int(operando2)
-    elif operando2 in variables:
+    if operando2 in variables:
         operando2_val = variables[operando2]
     else:
-        print("Error en la línea", numero_linea, ": Operando 2 no es válido")
+        print("Error en la línea", numero_linea, ": Operando 2 no definido  ")
         return 1
     variables[var_nombre] = operando1_val * operando2_val
     return 0
+
+def suma(linea, numero_linea):
+    temp = linea.split()
+    var_nombre = temp[1]
+    operando1 = temp[3]
+    operando2 = temp[4]
+    if var_nombre not in variables:
+        print("Error en la línea", numero_linea, ": Variable no definida")
+        return 1
+    if operando1 in variables:
+        operando1_val = variables[operando1]
+    else:
+        print("Error en la línea", numero_linea, ": Operando 1 no definido")
+        return 1
+    if operando2 in variables:
+        operando2_val = variables[operando2]
+    else:
+        print("Error en la línea", numero_linea, ": Operando 2 no definido")
+    
+    if isinstance(operando1_val, int) and isinstance(operando2_val, int):
+        variables[var_nombre] = operando1_val + operando2_val
+        return 0
+    else:
+        variables[var_nombre] = str(operando1_val) + " " + str(operando2_val)
+        return 0
+    
+def mostrar(linea, numero_linea):
+    temp = re.search(r"\((.*?)\)", linea).group(1)
+    if temp not in variables:
+        print("Error en la línea", numero_linea, ": Variable no definida")
+        return 1
+    archivo_output.write(str(variables[temp]) + "\n")
+    return 0
+
 def main(nombre_archivo):
     with open(nombre_archivo) as file_object:
         lista = file_object.readlines()
@@ -85,28 +115,25 @@ def main(nombre_archivo):
             hayerror = asignar_variable(linea, i)
         elif re.match(multiplicacion, linea):
             hayerror = multiplicacion_variables(linea, i)
+        elif re.match(suma, linea):
+            hayerror = suma(linea, i)
         elif re.match(leer_if, linea):
             # Add code to handle if statement
             pass
         elif re.match(leer_else, linea):
-            # Add code to handle else statement
+            hayerror = mostrar(linea, i)
             pass
         elif re.match(mostrar, linea):
             # Add code to handle mostrar statement
-            pass
-        elif re.match(concatenacion_texto, linea):
-            # Add code to handle concatenacion_texto statement
             pass
         else:
             print("Hay un error de sintaxis en la linea", i )
             hayerror = 1
         i += 1
+        
+        if hayerror == 1:
+            archivo_output.close()
+            break
+    
 
-    archivo_output.close()
-
-    if hayerror == 1:
-        return 1
-    else:
-        return 0
-
-temp2 = main("codigo.txt")
+main("codigo.txt")
