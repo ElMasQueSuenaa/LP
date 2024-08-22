@@ -1,13 +1,19 @@
 import re
 
 # EBNF para las diferentes expresiones
+corchete = r"\{|\}"
+igual = "=="
+mayor = ">"
+menor = "<"
 define = r"^DEFINE\s+\$_[A-Z][A-Za-z]*\s*$"
 asignacion = r"^DP\s+\$_[A-Z][A-Za-z]*\s+ASIG\s+(True|False|\d+|#[^#]*#|\$_[A-Z][A-Za-z]*)\s*$"
 suma = r"^DP\s+\$_[A-Z][A-Za-z]*\s+\+\s+(\$_[A-Z][A-Za-z]*|\d+|#[^#]*#)\s+(\$_[A-Z][A-Za-z]*|\d+|#[^#]*#)$"
-multiplicacion = r"^DP\s+\$_[A-Z][A-Za-z]*\s+\*\s+(\$_[A-Z][A-Za-z]*|\d+)\s*$"
-leer_if = r"^if\s*\(\s*\$_[A-Z][A-Za-z]*\s*\)\s*\{\s*$"
-leer_else = r"^\}\s*else\s*\{\s*$"
+multiplicacion = r"^DP\s+\$_[A-Z][A-Za-z]*\s+\*\s+(\$_[A-Z][A-Za-z]*|\d+)\s+(\$_[A-Z][A-Za-z]*|\d+)$"
+leer_if = r"^if\s+\(\s*\$_[A-Z][A-Za-z]*\s*\)\s+\{\s*$"
+leer_else = r"^\s*\}\s*else\s*\{\s*$"
 mostrar = r"^MOSTRAR\s*\(\s*\$_[A-Z][A-Za-z]*\s*\)\s*$"
+cond = r"^DP\s+\$_[A-Z][A-Za-z]*\s+(>|<|==)\s+\$_[A-Z][A-Za-z]*\s+\$_[A-Z][A-Za-z]*\s*$"
+
 
 archivo_output = open("output.txt", "w")
 
@@ -113,52 +119,108 @@ def ejecutar_mostrar(linea, numero_linea):
     Busca el nombre de la variable entre paréntesis, verifica si la variable existe 
     y tiene un valor asignado, y luego escribe ese valor en el archivo de salida "output.txt".
     """
-    # Extraer el nombre de la variable dentro de los paréntesis
     resultado = re.search(r"\((.*?)\)", linea)
     if resultado:
         variable_nombre = resultado.group(1)
     else:
         print(f"Error en la línea {numero_linea}: Sintaxis incorrecta en la instrucción MOSTRAR")
         return 1
-    
-    # Verificar si la variable existe
     if variable_nombre not in variables:
         print(f"Error en la línea {numero_linea}: Variable '{variable_nombre}' no definida")
         return 1
-    
-    # Obtener el valor de la variable
     valor = variables[variable_nombre]
-    
-    # Verificar si la variable tiene un valor asignado
     if valor is None:
         print(f"Error en la línea {numero_linea}: Variable '{variable_nombre}' no tiene un valor asignado")
         return 1
-    
-    # Escribir el valor en el archivo de salida
     archivo_output.write(str(valor) + "\n")
     return 0
+
+def reconocer_condicion(linea, numero_linea):
+    temp = linea.split()
+    nombre_condicion = temp[1]
+    operacion = temp[2]
+    operando1 = temp[3]
+    operando2 = temp[4]
+    if nombre_condicion not in variables:
+        print("Error en la línea", numero_linea, ": Variable no definida")
+        return 1
+    if operando1 not in variables:
+        print("Error en la línea", numero_linea, ": Operando 1 no definido")
+        return 1
+    if operando2 not in variables:
+        print("Error en la línea", numero_linea, ": Operando 2 no definido")
+        return 1
+    if re.match(igual, operacion):
+        if variables[operando1] == variables[operando2]:
+            variables[nombre_condicion] = "True"
+        else:
+            variables[nombre_condicion] = "False"
+        return 0
+    elif re.match(mayor, operacion):
+        if variables[operando1] > variables[operando2]:
+            variables[nombre_condicion] = "True"
+        else:
+            variables[nombre_condicion] = "False"
+        return 0
+    elif re.match(menor, operacion):
+        if variables[operando1] < variables[operando2]:
+            variables[nombre_condicion] = "True"
+        else:
+            variables[nombre_condicion] = "False"
+        return 0
+    else:
+        return 1
+    
+def procesar_if(codigo, i, lista):
+    temp = codigo.split()
+    nombre = temp[1]  
+    resultado = re.search(r"\((.*?)\)", nombre)
+    nombre_var = resultado.group(1)
+    if nombre_var not in variables:
+        print(f"Error en la línea {i + 1}: Variable '{nombre_var}' no definida")
+        return i
+    valor = variables[nombre_var]
+    if valor is None:
+        print(f"Error en la línea {i + 1}: Variable '{nombre_var}' no tiene un valor asignado")
+        return i
+    if valor == "True":
+        return i
+    else:
+        i += 1
+        while i < len(lista):
+            if re.match(leer_else, lista[i]):
+                return i
+            i += 1
+        print(f"Error en la línea {i + 1}: No se encontró el bloque else")
+        return i
+    
+
 
 
 nombre_archivo = "codigo.txt"
 with open(nombre_archivo) as file_object:
     lista = file_object.readlines()
 
-i = 1
+i = 0
 hayerror = 0
-for codigo in lista:
-    codigo = codigo.strip()
+while i < len(lista):
+    codigo = lista[i].strip()
     if re.match(define, codigo):
-        hayerror = definir_variable(codigo, i)
+        hayerror = definir_variable(codigo, i + 1)
     elif re.match(asignacion, codigo):
-        hayerror = asignar_variable(codigo, i)
+        hayerror = asignar_variable(codigo, i + 1)
     elif re.match(multiplicacion, codigo):
-        hayerror = multiplicacion_variables(codigo, i)
+        hayerror = multiplicacion_variables(codigo, i + 1)
     elif re.match(suma, codigo):
-        hayerror = suma_variables(codigo, i)
+        hayerror = suma_variables(codigo, i + 1)
     elif re.match(mostrar, codigo):
-        hayerror = ejecutar_mostrar(codigo, i)
+        hayerror = ejecutar_mostrar(codigo, i + 1)
+    elif re.match(cond, codigo):
+        hayerror = reconocer_condicion(codigo, i + 1)
+    elif re.match(leer_if, codigo):
+        i = procesar_if(codigo, i, lista)
     else:
-        print("Hay un error de sintaxis en la linea", i)
+        print("Hay un error de sintaxis en la linea", i + 1)
         hayerror = 1    
     if hayerror == 1:
         archivo_output.close()
