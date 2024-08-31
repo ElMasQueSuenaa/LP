@@ -2,9 +2,9 @@ import re
 
 # EBNF para las diferentes expresiones
 corchete = r"\}"
-igual = "=="
-mayor = ">"
-menor = "<"
+igual = r"=="
+mayor = r">"
+menor = r"<"
 define = r"\s*DEFINE\s+\$_[A-Z][A-Za-z]*\s*$"
 asignacion = r"\s*DP\s+\$_[A-Z][A-Za-z]*\s+ASIG\s+(True|False|\d+|#[^#]*#|\$_[A-Z][A-Za-z]*)\s*$"
 suma = r"\s*DP\s+\$_[A-Z][A-Za-z]*\s+\+\s+(\$_[A-Z][A-Za-z]*|\d+|#[^#]*#)\s+(\$_[A-Z][A-Za-z]*|\d+|#[^#]*#)$"
